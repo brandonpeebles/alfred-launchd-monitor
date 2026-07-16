@@ -322,3 +322,39 @@ def build_records(config: Config, query: str = "") -> list[JobRecord]:
                 info = None
         records.append(build_job_record(label, plist_path, list_entries, disabled_map, info))
     return records
+
+
+def emit_list(records: list[JobRecord], config: Config) -> dict:
+    """Build the Alfred Script Filter payload for the job list view."""
+    if not records:
+        pattern = config.label_glob or "*"
+        return {
+            "items": [
+                {
+                    "title": f"No launchd jobs match \"{pattern}\"",
+                    "subtitle": f"scope={config.scope} · adjust SCOPE / LABEL_GLOB in config",
+                    "valid": False,
+                }
+            ]
+        }
+    items = []
+    for record in records:
+        label = record.label
+        items.append(
+            {
+                "uid": label,
+                "title": label,
+                "subtitle": record.subtitle(),
+                "arg": label,
+                "valid": True,
+                "mods": {
+                    "cmd": {"arg": f"restart:{label}", "subtitle": "↻ Restart (kickstart -k)"},
+                    "alt": {
+                        "arg": f"tail-term:{label}",
+                        "subtitle": "\U0001f4df Tail log in terminal",
+                    },
+                    "ctrl": {"arg": f"peek:{label}", "subtitle": "\U0001f441 Peek log in Alfred"},
+                },
+            }
+        )
+    return {"items": items}
