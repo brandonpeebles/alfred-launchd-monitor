@@ -105,8 +105,14 @@ case "$action" in
   reveal-out) p="$(resolve out)"; [ -n "$p" ] || die "no stdout path"; run open -R "$p" ;;
   reveal-err) p="$(resolve err)"; [ -n "$p" ] || die "no stderr path"; run open -R "$p" ;;
   open-plist) p="$(resolve plist)"; [ -n "$p" ] || die "no plist path"; run open -t "$p" ;;
-  copy-label) [ "$DRY" = "1" ] && echo "+ pbcopy ${label}" || printf '%s' "$label" | pbcopy; notify "Launchd Monitor" "Copied label" ;;
-  copy-logpath-out) p="$(resolve out)"; [ "$DRY" = "1" ] && echo "+ pbcopy ${p}" || printf '%s' "$p" | pbcopy ;;
-  copy-logpath-err) p="$(resolve err)"; [ "$DRY" = "1" ] && echo "+ pbcopy ${p}" || printf '%s' "$p" | pbcopy ;;
+  copy-label)
+    if [ "$DRY" = "1" ]; then echo "+ pbcopy ${label}"; else printf '%s' "$label" | pbcopy; fi
+    notify "Launchd Monitor" "Copied label" ;;
+  copy-logpath-out)
+    p="$(resolve out)"; [ -n "$p" ] || die "no stdout path"
+    if [ "$DRY" = "1" ]; then echo "+ pbcopy ${p}"; else printf '%s' "$p" | pbcopy; fi ;;
+  copy-logpath-err)
+    p="$(resolve err)"; [ -n "$p" ] || die "no stderr path"
+    if [ "$DRY" = "1" ]; then echo "+ pbcopy ${p}"; else printf '%s' "$p" | pbcopy; fi ;;
   *) die "Unknown action: ${action}" ;;
 esac

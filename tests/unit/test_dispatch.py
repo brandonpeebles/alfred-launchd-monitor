@@ -42,3 +42,14 @@ def test_unknown_action_exits_nonzero():
 def test_label_with_dots_preserved():
     out = _run("restart:com.brandon.some.dotted.label").stdout
     assert "com.brandon.some.dotted.label" in out
+
+
+def test_copy_label_dry_run():
+    result = _run("copy-label:com.brandon.job")
+    assert result.returncode == 0
+    assert "+ pbcopy com.brandon.job" in result.stdout
+
+
+def test_copy_logpath_missing_path_exits_nonzero():
+    result = _run("copy-logpath-out:com.brandon.definitely-not-a-real-label")
+    assert result.returncode != 0
