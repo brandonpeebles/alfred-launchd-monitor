@@ -358,3 +358,118 @@ def emit_list(records: list[JobRecord], config: Config) -> dict:
             }
         )
     return {"items": items}
+
+
+@dataclass(frozen=True)
+class JobDetail:
+    """Full detail of a single job, merged from launchctl print and its plist."""
+
+    label: str
+    plist_path: Path | None
+    pid: int | None
+    last_exit_code: int | None
+    loaded: bool
+    disabled: bool
+    stdout_path: str | None
+    stderr_path: str | None
+    program_arguments: list[str]
+    working_dir: str | None
+
+    @property
+    def state(self) -> JobState:
+        """Derive display state; same precedence as JobRecord.state."""
+        return derive_state(self.disabled, self.loaded, self.pid, self.last_exit_code)
+
+    def summary(self) -> str:
+        """Build the informational row-0 summary string."""
+        state = self.state
+        parts = [f"{glyph(state)} {state.value}"]
+        if self.pid is not None:
+            parts.append(f"PID {self.pid}")
+        if self.last_exit_code is not None:
+            parts.append(f"last exit {self.last_exit_code}")
+        return " · ".join(parts)
+
+
+def _find_plist(config: Config, label: str) -> Path | None:
+    """Locate a job's plist in the agents dir when launchctl print did not report one."""
+    candidate = config.agents_dir / f"{label}.plist"
+    return candidate if candidate.exists() else None
+
+
+def build_detail(config: Config, label: str) -> JobDetail:
+    """Gather full detail for a single job, falling back to plist-only when not loaded."""
+    uid = os.getuid()
+    pinfo = launchctl_print(uid, label)
+    loaded = label in launchctl_list()
+    disabled = print_disabled(uid).get(label, False)
+    plist_path = Path(pinfo.plist_path) if pinfo.plist_path else _find_plist(config, label)
+    plist_info: PlistInfo | None = None
+    if plist_path is not None and plist_path.exists():
+        try:
+            plist_info = read_plist(plist_path)
+        except _PLIST_ERRORS:
+            plist_info = None
+    stdout_path = (plist_info.stdout_path if plist_info else None) or pinfo.stdout_path
+    stderr_path = (plist_info.stderr_path if plist_info else None) or pinfo.stderr_path
+    program_arguments = pinfo.program_arguments or (
+        plist_info.program_arguments if plist_info else []
+    )
+    return JobDetail(
+        label=label,
+        plist_path=plist_path,
+        pid=pinfo.pid,
+        last_exit_code=pinfo.last_exit_code,
+        loaded=loaded,
+        disabled=disabled,
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        program_arguments=program_arguments,
+        working_dir=(plist_info.working_dir if plist_info else None) or pinfo.working_dir,
+    )
+
+
+def _detail_row(title: str, action: str, label: str) -> dict:
+    """Build one actionable detail row whose arg is `<action>:<label>`."""
+    return {"title": title, "arg": f"{action}:{label}", "valid": True}
+
+
+def emit_detail(detail: JobDetail) -> dict:
+    """Build the Alfred Script Filter payload for a job's action menu."""
+    label = detail.label
+    items: list[dict] = [{"title": detail.summary(), "subtitle": label, "valid": False}]
+    items.append(_detail_row("↻ Restart (kickstart -k)", "restart", label))
+    if detail.loaded:
+        items.append(_detail_row("⏏ Unload (bootout)", "unload", label))
+    else:
+        items.append(_detail_row("⏵ Load (bootstrap)", "load", label))
+    if detail.disabled:
+        items.append(_detail_row("✓ Enable", "enable", label))
+    else:
+        items.append(_detail_row("\U0001f6ab Disable", "disable", label))
+    if detail.stdout_path:
+        items.append(_detail_row("\U0001f4df Tail stdout (terminal)", "tail-term-out", label))
+        items.append(_detail_row("\U0001f441 Peek stdout (Alfred)", "peek-out", label))
+        items.append(_detail_row("\U0001f4c2 Reveal stdout in Finder", "reveal-out", label))
+        items.append(_detail_row("⧉ Copy stdout path", "copy-logpath-out", label))
+    else:
+        items.append({"title": "stdout not configured in plist", "valid": False})
+    if detail.stderr_path:
+        items.append(_detail_row("\U0001f4df Tail stderr (terminal)", "tail-term-err", label))
+        items.append(_detail_row("\U0001f441 Peek stderr (Alfred)", "peek-err", label))
+    if detail.plist_path is not None:
+        items.append(_detail_row("\U0001f4dd Open plist in editor", "open-plist", label))
+    items.append(_detail_row("⧉ Copy label", "copy-label", label))
+    return {"items": items}
+
+
+def resolve_path(config: Config, label: str, kind: str) -> str:
+    """Return the resolved plist/stdout/stderr path for a label, or '' if unavailable."""
+    detail = build_detail(config, label)
+    if kind == "plist":
+        return str(detail.plist_path) if detail.plist_path else ""
+    if kind == "out":
+        return detail.stdout_path or ""
+    if kind == "err":
+        return detail.stderr_path or ""
+    return ""
