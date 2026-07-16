@@ -6,6 +6,8 @@ import plistlib
 import sys
 from pathlib import Path
 
+import tomllib
+
 UID_LIST = "10000000-0000-0000-0000-000000000001"
 UID_DETAIL = "20000000-0000-0000-0000-000000000002"
 UID_DISPATCH = "30000000-0000-0000-0000-000000000003"
@@ -90,6 +92,14 @@ def _config_var(variable: str, label: str, default: str, kind: str, pairs=None) 
     return {"config": config, "description": "", "label": label, "type": kind, "variable": variable}
 
 
+def _project_version() -> str:
+    """Read `[project].version` from pyproject.toml at the repo root."""
+    pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
+    with pyproject_path.open("rb") as handle:
+        data = tomllib.load(handle)
+    return data["project"]["version"]
+
+
 def build_plist() -> dict:
     """Assemble the complete Alfred workflow dict."""
     objects = [
@@ -159,7 +169,7 @@ def build_plist() -> dict:
         },
         "userconfigurationconfig": userconfig,
         "variablesdontexport": [],
-        "version": "0.1.0",
+        "version": _project_version(),
         "webaddress": "",
     }
 

@@ -1,6 +1,8 @@
 import importlib.util
 from pathlib import Path
 
+import tomllib
+
 _spec = importlib.util.spec_from_file_location(
     "build_info_plist",
     Path(__file__).parent.parent.parent / "tools" / "build_info_plist.py",
@@ -72,3 +74,10 @@ def test_log_stream_popup_has_no_both_option():
     log_stream_var = next(c for c in cfg if c["variable"] == "LOG_STREAM")
     values = [pair[1] for pair in log_stream_var["config"]["pairs"]]
     assert values == ["out", "err"]
+
+
+def test_version_matches_pyproject_toml():
+    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+    with pyproject_path.open("rb") as handle:
+        data = tomllib.load(handle)
+    assert build_info_plist.build_plist()["version"] == data["project"]["version"]
