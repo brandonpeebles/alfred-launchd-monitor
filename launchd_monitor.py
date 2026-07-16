@@ -504,6 +504,8 @@ def emit_detail(detail: JobDetail) -> dict:
         items.append(_detail_row("⏏ Unload (bootout)", "unload", label))
     else:
         items.append(_detail_row("⏵ Load (bootstrap)", "load", label))
+    if detail.loaded and detail.pid is not None:
+        items.append(_detail_row("◼ Stop (SIGTERM)", "stop", label))
     if detail.disabled:
         items.append(_detail_row("✓ Enable", "enable", label))
     else:
