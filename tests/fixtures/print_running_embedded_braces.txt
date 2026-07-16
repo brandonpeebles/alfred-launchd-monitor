@@ -1,0 +1,18 @@
+com.alfredapp.vitor.1password = {
+	active count = 1
+	path = /Users/brandon/Library/LaunchAgents/com.alfredapp.vitor.1password.plist
+	state = running
+	program = /usr/bin/osascript
+	arguments = {
+		/usr/bin/osascript
+		-l
+		JavaScript
+		-e
+		function run() { return 1 }
+	}
+	working directory = /Users/brandon
+	stdout path = /Users/brandon/Library/Logs/1password.out.log
+	stderr path = /Users/brandon/Library/Logs/1password.err.log
+	pid = 5931
+	last exit code = 0
+}
