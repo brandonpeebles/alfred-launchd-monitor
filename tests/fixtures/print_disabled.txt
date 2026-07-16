@@ -1,0 +1,4 @@
+disabled services = {
+	"com.brandon.morning-brief" => false
+	"com.brandon.disabled-job" => true
+}

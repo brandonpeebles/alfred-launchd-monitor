@@ -6,6 +6,7 @@ and no syntax newer than 3.9. stdout is the Alfred interface — diagnostics go 
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
@@ -115,3 +116,41 @@ class JobRecord:
             parts.append(f"exit {self.last_exit_code}")
         parts.append("disabled" if self.disabled else ("loaded" if self.loaded else "unloaded"))
         return " · ".join(parts)
+
+
+_DISABLED_RE = re.compile(r'"(?P<label>[^"]+)"\s*=>\s*(?P<val>true|false)')
+
+
+@dataclass(frozen=True)
+class ListEntry:
+    """One row of `launchctl list`: label, current PID (if running), last exit status."""
+
+    label: str
+    pid: int | None
+    last_status: int
+
+
+def parse_launchctl_list(output: str) -> dict[str, ListEntry]:
+    """Parse `launchctl list` output into label -> ListEntry, skipping the header row."""
+    entries: dict[str, ListEntry] = {}
+    for line in output.splitlines():
+        if not line.strip() or line.startswith("PID"):
+            continue
+        cols = line.split("\t")
+        if len(cols) < 3:
+            cols = line.split(None, 2)
+        if len(cols) < 3:
+            continue
+        pid_s, status_s, label = cols[0], cols[1], cols[2].strip()
+        pid = int(pid_s) if pid_s.isdigit() else None
+        try:
+            status = int(status_s)
+        except ValueError:
+            status = 0
+        entries[label] = ListEntry(label=label, pid=pid, last_status=status)
+    return entries
+
+
+def parse_print_disabled(output: str) -> dict[str, bool]:
+    """Parse `launchctl print-disabled` output into label -> disabled bool."""
+    return {m.group("label"): m.group("val") == "true" for m in _DISABLED_RE.finditer(output)}
