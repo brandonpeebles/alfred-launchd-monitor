@@ -42,9 +42,13 @@ die() {
 
 resolve() { python3 "$PY" path "$label" "$1"; }
 
+posix_quote() {
+  printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
 log_tool_cmd() {
   local path="$1" path_q
-  path_q="$(printf '%q' "$path")"
+  path_q="$(posix_quote "$path")"
   case "${LOG_TOOL:-tail}" in
     less) echo "less +F ${path_q}" ;;
     lnav)
@@ -100,36 +104,38 @@ tail_stream() {
   notify "Launchd Monitor" "📟 Tailing ${kind} for ${label}"
 }
 
-case "$action" in
-  restart)
-    run "$LAUNCHCTL" kickstart -k "$target" && notify "Launchd Monitor" "↻ Restarted ${label}" || die "restart failed: ${label}" ;;
-  unload)
-    run "$LAUNCHCTL" bootout "$target" && notify "Launchd Monitor" "⏏ Unloaded ${label}" || die "unload failed: ${label}" ;;
-  load)
-    plist="$(resolve plist)"
-    [ -n "$plist" ] || die "No plist found for ${label}"
-    run "$LAUNCHCTL" bootstrap "gui/${UID_NUM}" "$plist" && notify "Launchd Monitor" "⏵ Loaded ${label}" || die "load failed: ${label}" ;;
-  enable)
-    run "$LAUNCHCTL" enable "$target" && notify "Launchd Monitor" "✓ Enabled ${label}" || die "enable failed: ${label}" ;;
-  disable)
-    run "$LAUNCHCTL" disable "$target" && notify "Launchd Monitor" "🚫 Disabled ${label}" || die "disable failed: ${label}" ;;
-  peek)      peek_stream "${LOG_STREAM:-out}" ;;
-  peek-out)  peek_stream out ;;
-  peek-err)  peek_stream err ;;
-  tail-term)     tail_stream "${LOG_STREAM:-out}" ;;
-  tail-term-out) tail_stream out ;;
-  tail-term-err) tail_stream err ;;
-  reveal-out) p="$(resolve out)"; [ -n "$p" ] || die "no stdout path"; run open -R "$p" ;;
-  reveal-err) p="$(resolve err)"; [ -n "$p" ] || die "no stderr path"; run open -R "$p" ;;
-  open-plist) p="$(resolve plist)"; [ -n "$p" ] || die "no plist path"; run open -t "$p" ;;
-  copy-label)
-    if [ "$DRY" = "1" ]; then echo "+ pbcopy ${label}"; else printf '%s' "$label" | pbcopy; fi
-    notify "Launchd Monitor" "Copied label" ;;
-  copy-logpath-out)
-    p="$(resolve out)"; [ -n "$p" ] || die "no stdout path"
-    if [ "$DRY" = "1" ]; then echo "+ pbcopy ${p}"; else printf '%s' "$p" | pbcopy; fi ;;
-  copy-logpath-err)
-    p="$(resolve err)"; [ -n "$p" ] || die "no stderr path"
-    if [ "$DRY" = "1" ]; then echo "+ pbcopy ${p}"; else printf '%s' "$p" | pbcopy; fi ;;
-  *) die "Unknown action: ${action}" ;;
-esac
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  case "$action" in
+    restart)
+      run "$LAUNCHCTL" kickstart -k "$target" && notify "Launchd Monitor" "↻ Restarted ${label}" || die "restart failed: ${label}" ;;
+    unload)
+      run "$LAUNCHCTL" bootout "$target" && notify "Launchd Monitor" "⏏ Unloaded ${label}" || die "unload failed: ${label}" ;;
+    load)
+      plist="$(resolve plist)"
+      [ -n "$plist" ] || die "No plist found for ${label}"
+      run "$LAUNCHCTL" bootstrap "gui/${UID_NUM}" "$plist" && notify "Launchd Monitor" "⏵ Loaded ${label}" || die "load failed: ${label}" ;;
+    enable)
+      run "$LAUNCHCTL" enable "$target" && notify "Launchd Monitor" "✓ Enabled ${label}" || die "enable failed: ${label}" ;;
+    disable)
+      run "$LAUNCHCTL" disable "$target" && notify "Launchd Monitor" "🚫 Disabled ${label}" || die "disable failed: ${label}" ;;
+    peek)      peek_stream "${LOG_STREAM:-out}" ;;
+    peek-out)  peek_stream out ;;
+    peek-err)  peek_stream err ;;
+    tail-term)     tail_stream "${LOG_STREAM:-out}" ;;
+    tail-term-out) tail_stream out ;;
+    tail-term-err) tail_stream err ;;
+    reveal-out) p="$(resolve out)"; [ -n "$p" ] || die "no stdout path"; run open -R "$p" ;;
+    reveal-err) p="$(resolve err)"; [ -n "$p" ] || die "no stderr path"; run open -R "$p" ;;
+    open-plist) p="$(resolve plist)"; [ -n "$p" ] || die "no plist path"; run open -t "$p" ;;
+    copy-label)
+      if [ "$DRY" = "1" ]; then echo "+ pbcopy ${label}"; else printf '%s' "$label" | pbcopy; fi
+      notify "Launchd Monitor" "Copied label" ;;
+    copy-logpath-out)
+      p="$(resolve out)"; [ -n "$p" ] || die "no stdout path"
+      if [ "$DRY" = "1" ]; then echo "+ pbcopy ${p}"; else printf '%s' "$p" | pbcopy; fi ;;
+    copy-logpath-err)
+      p="$(resolve err)"; [ -n "$p" ] || die "no stderr path"
+      if [ "$DRY" = "1" ]; then echo "+ pbcopy ${p}"; else printf '%s' "$p" | pbcopy; fi ;;
+    *) die "Unknown action: ${action}" ;;
+  esac
+fi

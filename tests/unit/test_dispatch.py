@@ -16,6 +16,57 @@ def _run(spec, extra_env=None):
     )
 
 
+def _call_log_tool_cmd(path, extra_env=None):
+    env = {"PATH": "/usr/bin:/bin", "HOME": "/tmp", **(extra_env or {})}
+    return subprocess.run(
+        ["bash", "-c", f'source "{DISPATCH}"; log_tool_cmd "$1"', "--", path],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+
+def test_log_tool_cmd_avoids_bash_ansi_c_quoting():
+    path = "/tmp/log\tdir with 'quote'/app.out.log"
+    result = _call_log_tool_cmd(path)
+    assert result.returncode == 0
+    assert "$'" not in result.stdout
+
+
+def test_log_tool_cmd_roundtrips_under_a_true_posix_shell():
+    path = "/tmp/log\tdir with 'quote'/app.out.log"
+    result = _call_log_tool_cmd(path)
+    assert result.returncode == 0
+    cmd = result.stdout.strip()
+    quoted = cmd[len("tail -n 200 -F ") :]
+    roundtrip = subprocess.run(
+        ["/bin/dash", "-c", f"printf '%s' {quoted}"],
+        capture_output=True,
+        text=True,
+    )
+    assert roundtrip.stdout == path
+
+
+def test_log_tool_cmd_roundtrips_under_bash_login_shell():
+    path = "/tmp/log\tdir with 'quote'/app.out.log"
+    result = _call_log_tool_cmd(path)
+    assert result.returncode == 0
+    cmd = result.stdout.strip()
+    quoted = cmd[len("tail -n 200 -F ") :]
+    roundtrip = subprocess.run(
+        ["/bin/bash", "-c", f"printf '%s' {quoted}"],
+        capture_output=True,
+        text=True,
+    )
+    assert roundtrip.stdout == path
+
+
+def test_log_tool_cmd_default_structure_unchanged():
+    path = "/tmp/plain/app.out.log"
+    result = _call_log_tool_cmd(path)
+    assert result.stdout.strip() == f"tail -n 200 -F '{path}'"
+
+
 def test_restart_builds_kickstart():
     out = _run("restart:com.brandon.job").stdout
     assert "/bin/launchctl kickstart -k gui/" in out
