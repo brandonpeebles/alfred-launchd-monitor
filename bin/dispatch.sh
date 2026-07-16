@@ -7,7 +7,7 @@ export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin:${PA
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PY="$SCRIPT_DIR/launchd_monitor.py"
-LAUNCHCTL="/bin/launchctl"
+LAUNCHCTL="${LAUNCHCTL:-/bin/launchctl}"
 DRY="${DISPATCH_DRY_RUN:-0}"
 UID_NUM="$(id -u)"
 LOG_LINES="${LOG_LINES:-200}"
@@ -27,7 +27,7 @@ run() {
 
 notify() {
   [ "$DRY" = "1" ] && { echo "notify: $2"; return 0; }
-  osascript - "$2" >/dev/null 2>&1 <<'APPLESCRIPT' || true
+  "${OSASCRIPT:-osascript}" - "$2" >/dev/null 2>&1 <<'APPLESCRIPT' || true
 on run argv
     display notification (item 1 of argv) with title "Launchd Monitor"
 end run
@@ -102,17 +102,17 @@ tail_stream() {
 
 case "$action" in
   restart)
-    run "$LAUNCHCTL" kickstart -k "$target" && notify "Launchd Monitor" "↻ Restarted ${label}" ;;
+    run "$LAUNCHCTL" kickstart -k "$target" && notify "Launchd Monitor" "↻ Restarted ${label}" || die "restart failed: ${label}" ;;
   unload)
-    run "$LAUNCHCTL" bootout "$target" && notify "Launchd Monitor" "⏏ Unloaded ${label}" ;;
+    run "$LAUNCHCTL" bootout "$target" && notify "Launchd Monitor" "⏏ Unloaded ${label}" || die "unload failed: ${label}" ;;
   load)
     plist="$(resolve plist)"
     [ -n "$plist" ] || die "No plist found for ${label}"
-    run "$LAUNCHCTL" bootstrap "gui/${UID_NUM}" "$plist" && notify "Launchd Monitor" "⏵ Loaded ${label}" ;;
+    run "$LAUNCHCTL" bootstrap "gui/${UID_NUM}" "$plist" && notify "Launchd Monitor" "⏵ Loaded ${label}" || die "load failed: ${label}" ;;
   enable)
-    run "$LAUNCHCTL" enable "$target" && notify "Launchd Monitor" "✓ Enabled ${label}" ;;
+    run "$LAUNCHCTL" enable "$target" && notify "Launchd Monitor" "✓ Enabled ${label}" || die "enable failed: ${label}" ;;
   disable)
-    run "$LAUNCHCTL" disable "$target" && notify "Launchd Monitor" "🚫 Disabled ${label}" ;;
+    run "$LAUNCHCTL" disable "$target" && notify "Launchd Monitor" "🚫 Disabled ${label}" || die "disable failed: ${label}" ;;
   peek)      peek_stream "${LOG_STREAM:-out}" ;;
   peek-out)  peek_stream out ;;
   peek-err)  peek_stream err ;;
