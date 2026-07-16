@@ -37,3 +37,11 @@ def test_subtitle():
     assert sub == "🟢 running · PID 4821 · exit 0 · loaded"
     assert _rec(pid=None, last_exit_code=78).subtitle() == "🔴 exited · exit 78 · loaded"
     assert _rec(loaded=False, last_exit_code=None).subtitle() == "⚫ unloaded · unloaded"
+
+
+def test_subtitle_signal_terminated():
+    assert "SIGTERM" in _rec(pid=None, last_exit_code=-15).subtitle()
+
+
+def test_subtitle_unknown_signal_falls_back_to_number():
+    assert "-999" in _rec(pid=None, last_exit_code=-999).subtitle()

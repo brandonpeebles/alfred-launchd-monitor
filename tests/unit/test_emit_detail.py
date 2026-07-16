@@ -69,3 +69,7 @@ def test_detail_missing_stdout_shows_notice_row():
     args = _args(out)
     assert any("stdout not configured" in t for t in titles)
     assert "peek-out:com.brandon.job" not in args
+
+
+def test_detail_summary_signal_terminated():
+    assert "SIGTERM" in _detail(last_exit_code=-15, pid=None).summary()
