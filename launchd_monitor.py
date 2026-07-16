@@ -12,6 +12,7 @@ import logging
 import os
 import plistlib
 import re
+import signal
 import subprocess
 import sys
 from collections.abc import Mapping
@@ -80,6 +81,16 @@ def glyph(state: JobState) -> str:
     return _GLYPHS[state]
 
 
+def _format_exit_status(code: int) -> str:
+    """Render an exit code; negative signal-death codes get a readable signal name."""
+    if code < 0:
+        try:
+            return f"killed by {signal.Signals(-code).name}"
+        except ValueError:
+            pass
+    return f"exit {code}"
+
+
 def derive_state(
     disabled: bool, loaded: bool, pid: int | None, last_exit_code: int | None
 ) -> JobState:
@@ -120,7 +131,7 @@ class JobRecord:
         if self.pid is not None:
             parts.append(f"PID {self.pid}")
         if self.last_exit_code is not None:
-            parts.append(f"exit {self.last_exit_code}")
+            parts.append(_format_exit_status(self.last_exit_code))
         parts.append("disabled" if self.disabled else ("loaded" if self.loaded else "unloaded"))
         return " · ".join(parts)
 
@@ -393,7 +404,7 @@ class JobDetail:
         if self.pid is not None:
             parts.append(f"PID {self.pid}")
         if self.last_exit_code is not None:
-            parts.append(f"last exit {self.last_exit_code}")
+            parts.append(f"last {_format_exit_status(self.last_exit_code)}")
         return " · ".join(parts)
 
 
