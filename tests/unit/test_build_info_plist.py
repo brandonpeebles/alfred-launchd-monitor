@@ -65,3 +65,10 @@ def test_script_filters_use_argv():
         objs[build_info_plist.UID_DETAIL]["config"]["scriptargtype"]
         == build_info_plist._ARG_AS_ARGV
     )
+
+
+def test_log_stream_popup_has_no_both_option():
+    cfg = build_info_plist.build_plist()["userconfigurationconfig"]
+    log_stream_var = next(c for c in cfg if c["variable"] == "LOG_STREAM")
+    values = [pair[1] for pair in log_stream_var["config"]["pairs"]]
+    assert values == ["out", "err"]

@@ -28,7 +28,7 @@ Alfred prompts for configuration on first import.
 | `AGENTS_DIR` | `~/Library/LaunchAgents` | plist source dir |
 | `TERMINAL` | `ghostty` | `ghostty` \| `terminal` \| `iterm` |
 | `LOG_TOOL` | `tail` | `tail` \| `less` \| `lnav` (falls back to `tail` if not installed) |
-| `LOG_STREAM` | `out` | `out` \| `err` \| `both` |
+| `LOG_STREAM` | `out` | `out` \| `err` |
 | `LOG_LINES` | `200` | scrollback for peek/tail |
 
 ## Develop
