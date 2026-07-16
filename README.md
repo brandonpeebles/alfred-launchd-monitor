@@ -40,4 +40,6 @@ uv run ruff format .   # format
 tools/package.sh       # rebuild the .alfredworkflow
 ```
 
+`uv.lock` is committed to pin dev dependency versions for reproducible environments.
+
 User `gui` domain only — no `sudo`/LaunchDaemons.
