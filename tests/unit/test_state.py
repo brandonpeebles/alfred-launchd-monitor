@@ -45,3 +45,10 @@ def test_subtitle_signal_terminated():
 
 def test_subtitle_unknown_signal_falls_back_to_number():
     assert "-999" in _rec(pid=None, last_exit_code=-999).subtitle()
+
+
+def test_subtitle_disabled_with_pid_shows_running():
+    assert (
+        _rec(disabled=True, pid=4821, last_exit_code=0).subtitle()
+        == "🚫 disabled (running, PID 4821) · exit 0 · disabled"
+    )

@@ -30,6 +30,12 @@ def test_detail_summary_row_first_and_invalid():
     assert out["items"][0]["title"].startswith("🟢 running")
 
 
+def test_detail_summary_disabled_with_pid_shows_running():
+    out = emit_detail(_detail(disabled=True))
+    title = out["items"][0]["title"]
+    assert "disabled (running, PID 4821)" in title
+
+
 def test_detail_loaded_shows_unload_not_load():
     args = _args(emit_detail(_detail(loaded=True)))
     assert "unload:com.brandon.job" in args

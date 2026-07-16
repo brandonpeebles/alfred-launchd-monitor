@@ -127,9 +127,12 @@ class JobRecord:
     def subtitle(self) -> str:
         """Build the Alfred row subtitle: glyph · state · PID · exit · load state."""
         state = self.state
-        parts = [f"{glyph(state)} {state.value}"]
-        if self.pid is not None:
-            parts.append(f"PID {self.pid}")
+        if state is JobState.DISABLED and self.pid is not None:
+            parts = [f"{glyph(state)} disabled (running, PID {self.pid})"]
+        else:
+            parts = [f"{glyph(state)} {state.value}"]
+            if self.pid is not None:
+                parts.append(f"PID {self.pid}")
         if self.last_exit_code is not None:
             parts.append(_format_exit_status(self.last_exit_code))
         parts.append("disabled" if self.disabled else ("loaded" if self.loaded else "unloaded"))
@@ -400,9 +403,12 @@ class JobDetail:
     def summary(self) -> str:
         """Build the informational row-0 summary string."""
         state = self.state
-        parts = [f"{glyph(state)} {state.value}"]
-        if self.pid is not None:
-            parts.append(f"PID {self.pid}")
+        if state is JobState.DISABLED and self.pid is not None:
+            parts = [f"{glyph(state)} disabled (running, PID {self.pid})"]
+        else:
+            parts = [f"{glyph(state)} {state.value}"]
+            if self.pid is not None:
+                parts.append(f"PID {self.pid}")
         if self.last_exit_code is not None:
             parts.append(f"last {_format_exit_status(self.last_exit_code)}")
         return " · ".join(parts)
