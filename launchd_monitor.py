@@ -6,8 +6,10 @@ and no syntax newer than 3.9. stdout is the Alfred interface — diagnostics go 
 
 from __future__ import annotations
 
+import os
 import plistlib
 import re
+import subprocess
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
@@ -231,3 +233,28 @@ def parse_launchctl_print(output: str) -> PrintInfo:
         stderr_path=_find_scalar(output, "stderr path"),
         working_dir=_find_scalar(output, "working directory"),
     )
+
+
+LAUNCHCTL = "/bin/launchctl"
+_SAFE_PATH = "/usr/bin:/bin:/usr/sbin:/sbin"
+
+
+def _run(args: list[str]) -> subprocess.CompletedProcess:
+    """Run a command with an explicit minimal PATH (Alfred's env is minimal)."""
+    env = {**os.environ, "PATH": _SAFE_PATH}
+    return subprocess.run(args, capture_output=True, text=True, env=env, check=False)
+
+
+def launchctl_list() -> dict[str, ListEntry]:
+    """Return label -> ListEntry from `launchctl list`."""
+    return parse_launchctl_list(_run([LAUNCHCTL, "list"]).stdout)
+
+
+def print_disabled(uid: int) -> dict[str, bool]:
+    """Return label -> disabled bool from `launchctl print-disabled gui/<uid>`."""
+    return parse_print_disabled(_run([LAUNCHCTL, "print-disabled", f"gui/{uid}"]).stdout)
+
+
+def launchctl_print(uid: int, label: str) -> PrintInfo:
+    """Return parsed detail from `launchctl print gui/<uid>/<label>` (empty if not loaded)."""
+    return parse_launchctl_print(_run([LAUNCHCTL, "print", f"gui/{uid}/{label}"]).stdout)
