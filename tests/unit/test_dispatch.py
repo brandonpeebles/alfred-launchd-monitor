@@ -50,9 +50,37 @@ def test_copy_label_dry_run():
     assert "+ pbcopy com.brandon.job" in result.stdout
 
 
-def test_copy_logpath_missing_path_exits_nonzero():
-    result = _run("copy-logpath-out:com.brandon.definitely-not-a-real-label")
+def _write_stub_launchd_monitor(tmp_path):
+    stub = tmp_path / "stub_launchd_monitor.py"
+    stub.write_text(
+        "#!/usr/bin/env python3\n"
+        "import os, sys\n"
+        'if len(sys.argv) >= 2 and sys.argv[1] == "path":\n'
+        '    print(os.environ.get("FAKE_PATH", ""))\n'
+    )
+    stub.chmod(0o755)
+    return stub
+
+
+def test_copy_logpath_missing_path_exits_nonzero(tmp_path):
+    # Hermetic: point PY at a stub that never shells out to launchctl, so this
+    # doesn't depend on the real launchd state of whatever machine runs the suite.
+    stub = _write_stub_launchd_monitor(tmp_path)
+    result = _run(
+        "copy-logpath-out:com.brandon.definitely-not-a-real-label",
+        extra_env={"PY": str(stub)},
+    )
     assert result.returncode != 0
+
+
+def test_copy_logpath_out_uses_resolved_path(tmp_path):
+    stub = _write_stub_launchd_monitor(tmp_path)
+    result = _run(
+        "copy-logpath-out:com.brandon.job",
+        extra_env={"PY": str(stub), "FAKE_PATH": "/tmp/some/job/out.log"},
+    )
+    assert result.returncode == 0
+    assert "+ pbcopy /tmp/some/job/out.log" in result.stdout
 
 
 def test_restart_failure_notifies_and_exits_nonzero(tmp_path):
