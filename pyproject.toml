@@ -1,0 +1,19 @@
+[project]
+name = "alfred-launchd-monitor"
+version = "0.1.0"
+description = "Alfred 5 workflow to observe and control macOS launchd LaunchAgents"
+requires-python = ">=3.9"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
