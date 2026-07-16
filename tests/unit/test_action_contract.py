@@ -9,9 +9,9 @@ LABEL = "com.brandon.contract"
 
 # bin/dispatch.sh handles these actions, but nothing in launchd_monitor.py ever
 # emits them -- tracked separately as issue #11 ("Asymmetric stderr actions:
-# reveal-err/copy-logpath-err handled in dispatch but never emitted"). Remove
-# this allowlist entry (and this comment) once #11 is resolved.
-KNOWN_DISPATCH_ONLY_GAPS = {"reveal-err", "copy-logpath-err"}
+# reveal-err/copy-logpath-err handled in dispatch but never emitted"). Issue #11
+# is resolved: launchd_monitor.py now emits both, so this allowlist is empty.
+KNOWN_DISPATCH_ONLY_GAPS = set()
 
 
 def _detail(**kw):
