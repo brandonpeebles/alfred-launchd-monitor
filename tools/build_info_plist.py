@@ -137,7 +137,7 @@ def build_plist() -> dict:
             "Log stream",
             "out",
             "popupbutton",
-            pairs=[["stdout", "out"], ["stderr", "err"], ["both", "both"]],
+            pairs=[["stdout", "out"], ["stderr", "err"]],
         ),
         _config_var("LOG_LINES", "Log scrollback lines", "200", "textfield"),
     ]
