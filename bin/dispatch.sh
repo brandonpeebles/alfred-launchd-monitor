@@ -27,7 +27,11 @@ run() {
 
 notify() {
   [ "$DRY" = "1" ] && { echo "notify: $2"; return 0; }
-  osascript -e "display notification \"$2\" with title \"Launchd Monitor\"" >/dev/null 2>&1 || true
+  osascript - "$2" >/dev/null 2>&1 <<'APPLESCRIPT' || true
+on run argv
+    display notification (item 1 of argv) with title "Launchd Monitor"
+end run
+APPLESCRIPT
 }
 
 die() {
@@ -39,26 +43,39 @@ die() {
 resolve() { python3 "$PY" path "$label" "$1"; }
 
 log_tool_cmd() {
-  local path="$1"
+  local path="$1" path_q
+  path_q="$(printf '%q' "$path")"
   case "${LOG_TOOL:-tail}" in
-    less) echo "less +F '$path'" ;;
+    less) echo "less +F ${path_q}" ;;
     lnav)
       if command -v lnav >/dev/null 2>&1; then
-        echo "lnav '$path'"
+        echo "lnav ${path_q}"
       else
         notify "Launchd Monitor" "lnav not installed; using tail"
-        echo "tail -n ${LOG_LINES} -F '$path'"
+        echo "tail -n ${LOG_LINES} -F ${path_q}"
       fi ;;
-    *) echo "tail -n ${LOG_LINES} -F '$path'" ;;
+    *) echo "tail -n ${LOG_LINES} -F ${path_q}" ;;
   esac
 }
 
 open_terminal() {
   local cmd="$1"
   case "${TERMINAL:-ghostty}" in
-    ghostty) run open -na Ghostty --args -e "$cmd" ;;
-    iterm)   run osascript -e "tell application \"iTerm\" to create window with default profile command \"$cmd\"" ;;
-    *)       run osascript -e "tell application \"Terminal\" to do script \"$cmd\"" ;;
+    ghostty) run open -na Ghostty --args -e /bin/sh -c "$cmd" ;;
+    iterm)
+      run osascript - "$cmd" <<'APPLESCRIPT'
+on run argv
+    tell application "iTerm" to create window with default profile command (item 1 of argv)
+end run
+APPLESCRIPT
+      ;;
+    *)
+      run osascript - "$cmd" <<'APPLESCRIPT'
+on run argv
+    tell application "Terminal" to do script (item 1 of argv)
+end run
+APPLESCRIPT
+      ;;
   esac
 }
 
