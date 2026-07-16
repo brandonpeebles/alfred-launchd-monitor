@@ -43,3 +43,7 @@ tools/package.sh       # rebuild the .alfredworkflow
 `uv.lock` is committed to pin dev dependency versions for reproducible environments.
 
 User `gui` domain only — no `sudo`/LaunchDaemons.
+
+## Credits
+
+Workflow icon: [Magnifying glass icons created by lakonicon - Flaticon](https://www.flaticon.com/free-icons/magnifying-glass).
