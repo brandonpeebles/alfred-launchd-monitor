@@ -3,6 +3,17 @@ from pathlib import Path
 import launchd_monitor as lm
 from launchd_monitor import Config, ListEntry, PlistInfo, build_job_record, discover_pairs
 
+_EMPTY_PRINT_INFO = lm.PrintInfo(
+    plist_path=None,
+    pid=None,
+    last_exit_code=None,
+    state=None,
+    program_arguments=[],
+    stdout_path=None,
+    stderr_path=None,
+    working_dir=None,
+)
+
 
 def test_discover_pairs_gui_scope():
     cfg = Config.from_env({"SCOPE": "gui"})
@@ -54,3 +65,50 @@ def test_build_job_record_unloaded_disabled():
     assert rec.loaded is False
     assert rec.disabled is True
     assert rec.state.value == "disabled"
+
+
+def test_find_plist_exact_filename_match(tmp_path, monkeypatch):
+    plist = tmp_path / "com.x.y.plist"
+    plist.write_bytes(b"")
+    monkeypatch.setattr(lm, "read_plist", lambda p: PlistInfo("com.x.y", None, None, [], None))
+    cfg = Config.from_env({"SCOPE": "agents", "AGENTS_DIR": str(tmp_path)})
+    assert lm._find_plist(cfg, "com.x.y") == plist
+
+
+def test_find_plist_scans_for_mismatched_label(tmp_path, monkeypatch):
+    plist = tmp_path / "myjob.plist"
+    plist.write_bytes(b"")
+
+    def fake_read_plist(path):
+        assert path == plist
+        return PlistInfo("com.x.y", None, None, [], None)
+
+    monkeypatch.setattr(lm, "read_plist", fake_read_plist)
+    cfg = Config.from_env({"SCOPE": "agents", "AGENTS_DIR": str(tmp_path)})
+    assert lm._find_plist(cfg, "com.x.y") == plist
+
+
+def test_find_plist_no_match_returns_none(tmp_path, monkeypatch):
+    (tmp_path / "other.plist").write_bytes(b"")
+    monkeypatch.setattr(lm, "read_plist", lambda p: PlistInfo("com.other", None, None, [], None))
+    cfg = Config.from_env({"SCOPE": "agents", "AGENTS_DIR": str(tmp_path)})
+    assert lm._find_plist(cfg, "com.x.y") is None
+
+
+def test_build_detail_finds_plist_by_label_when_unloaded(tmp_path, monkeypatch):
+    plist = tmp_path / "myjob.plist"
+    plist.write_bytes(b"")
+    plist_info = PlistInfo("com.x.y", "/tmp/out.log", "/tmp/err.log", ["/usr/bin/foo"], "/tmp")
+    monkeypatch.setattr(lm, "read_plist", lambda p: plist_info)
+    monkeypatch.setattr(lm, "launchctl_print", lambda uid, label: _EMPTY_PRINT_INFO)
+    monkeypatch.setattr(lm, "launchctl_list", lambda: {})
+    monkeypatch.setattr(lm, "print_disabled", lambda uid: {})
+    cfg = Config.from_env({"SCOPE": "agents", "AGENTS_DIR": str(tmp_path)})
+
+    detail = lm.build_detail(cfg, "com.x.y")
+
+    assert detail.plist_path == plist
+    assert detail.stdout_path == "/tmp/out.log"
+    assert detail.stderr_path == "/tmp/err.log"
+    assert detail.program_arguments == ["/usr/bin/foo"]
+    assert detail.working_dir == "/tmp"
