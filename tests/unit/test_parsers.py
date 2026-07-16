@@ -23,9 +23,7 @@ def test_parse_launchctl_list_ignores_header_and_blanks():
 
 
 def test_parse_print_disabled():
-    disabled = parse_print_disabled(
-        (FIXTURES / "print_disabled.txt").read_text(encoding="utf-8")
-    )
+    disabled = parse_print_disabled((FIXTURES / "print_disabled.txt").read_text(encoding="utf-8"))
     assert disabled == {
         "com.brandon.morning-brief": False,
         "com.brandon.disabled-job": True,

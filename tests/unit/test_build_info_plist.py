@@ -30,10 +30,10 @@ def test_list_keyword_lj():
 def test_list_connects_to_detail_and_dispatch_with_modifiers():
     conns = build_info_plist.build_plist()["connections"][build_info_plist.UID_LIST]
     dests = {(c["destinationuid"], c["modifiers"]) for c in conns}
-    assert (build_info_plist.UID_DETAIL, 0) in dests           # Enter -> detail
-    assert (build_info_plist.UID_DISPATCH, 1048576) in dests   # cmd -> dispatch
-    assert (build_info_plist.UID_DISPATCH, 524288) in dests    # alt -> dispatch
-    assert (build_info_plist.UID_DISPATCH, 262144) in dests    # ctrl -> dispatch
+    assert (build_info_plist.UID_DETAIL, 0) in dests  # Enter -> detail
+    assert (build_info_plist.UID_DISPATCH, 1048576) in dests  # cmd -> dispatch
+    assert (build_info_plist.UID_DISPATCH, 524288) in dests  # alt -> dispatch
+    assert (build_info_plist.UID_DISPATCH, 262144) in dests  # ctrl -> dispatch
 
 
 def test_dispatch_connects_to_largetype():
@@ -45,7 +45,12 @@ def test_config_sheet_variables_present():
     cfg = build_info_plist.build_plist()["userconfigurationconfig"]
     variables = {c["variable"] for c in cfg}
     expected = {
-        "SCOPE", "LABEL_GLOB", "AGENTS_DIR", "TERMINAL",
-        "LOG_TOOL", "LOG_STREAM", "LOG_LINES"
+        "SCOPE",
+        "LABEL_GLOB",
+        "AGENTS_DIR",
+        "TERMINAL",
+        "LOG_TOOL",
+        "LOG_STREAM",
+        "LOG_LINES",
     }
     assert variables == expected

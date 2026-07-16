@@ -109,16 +109,36 @@ def build_plist() -> dict:
         UID_DISPATCH: [_conn(UID_LARGETYPE, MOD_NONE)],
     }
     userconfig = [
-        _config_var("SCOPE", "Scope", "agents", "popupbutton",
-                    pairs=[["LaunchAgents dir", "agents"], ["All gui labels", "gui"]]),
+        _config_var(
+            "SCOPE",
+            "Scope",
+            "agents",
+            "popupbutton",
+            pairs=[["LaunchAgents dir", "agents"], ["All gui labels", "gui"]],
+        ),
         _config_var("LABEL_GLOB", "Label glob (e.g. com.brandon.*)", "", "textfield"),
         _config_var("AGENTS_DIR", "LaunchAgents dir", "~/Library/LaunchAgents", "textfield"),
-        _config_var("TERMINAL", "Terminal", "ghostty", "popupbutton",
-                    pairs=[["Ghostty", "ghostty"], ["Terminal", "terminal"], ["iTerm", "iterm"]]),
-        _config_var("LOG_TOOL", "Log tool", "tail", "popupbutton",
-                    pairs=[["tail", "tail"], ["less", "less"], ["lnav", "lnav"]]),
-        _config_var("LOG_STREAM", "Log stream", "out", "popupbutton",
-                    pairs=[["stdout", "out"], ["stderr", "err"], ["both", "both"]]),
+        _config_var(
+            "TERMINAL",
+            "Terminal",
+            "ghostty",
+            "popupbutton",
+            pairs=[["Ghostty", "ghostty"], ["Terminal", "terminal"], ["iTerm", "iterm"]],
+        ),
+        _config_var(
+            "LOG_TOOL",
+            "Log tool",
+            "tail",
+            "popupbutton",
+            pairs=[["tail", "tail"], ["less", "less"], ["lnav", "lnav"]],
+        ),
+        _config_var(
+            "LOG_STREAM",
+            "Log stream",
+            "out",
+            "popupbutton",
+            pairs=[["stdout", "out"], ["stderr", "err"], ["both", "both"]],
+        ),
         _config_var("LOG_LINES", "Log scrollback lines", "200", "textfield"),
     ]
     return {
