@@ -474,6 +474,8 @@ def emit_detail(detail: JobDetail) -> dict:
     if detail.stderr_path:
         items.append(_detail_row("\U0001f4df Tail stderr (terminal)", "tail-term-err", label))
         items.append(_detail_row("\U0001f441 Peek stderr (Alfred)", "peek-err", label))
+        items.append(_detail_row("\U0001f4c2 Reveal stderr in Finder", "reveal-err", label))
+        items.append(_detail_row("⧉ Copy stderr path", "copy-logpath-err", label))
     if detail.plist_path is not None:
         items.append(_detail_row("\U0001f4dd Open plist in editor", "open-plist", label))
     items.append(_detail_row("⧉ Copy label", "copy-label", label))

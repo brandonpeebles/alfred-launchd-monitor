@@ -73,3 +73,17 @@ def test_detail_missing_stdout_shows_notice_row():
 
 def test_detail_summary_signal_terminated():
     assert "SIGTERM" in _detail(last_exit_code=-15, pid=None).summary()
+
+
+def test_detail_stderr_actions_present():
+    args = _args(emit_detail(_detail()))
+    assert "tail-term-err:com.brandon.job" in args
+    assert "peek-err:com.brandon.job" in args
+    assert "reveal-err:com.brandon.job" in args
+    assert "copy-logpath-err:com.brandon.job" in args
+
+
+def test_detail_missing_stderr_omits_actions():
+    args = _args(emit_detail(_detail(stderr_path=None)))
+    assert "reveal-err:com.brandon.job" not in args
+    assert "copy-logpath-err:com.brandon.job" not in args
