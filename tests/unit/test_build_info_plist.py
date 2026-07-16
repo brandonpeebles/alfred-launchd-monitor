@@ -1,0 +1,51 @@
+import importlib.util
+from pathlib import Path
+
+_spec = importlib.util.spec_from_file_location(
+    "build_info_plist",
+    Path(__file__).parent.parent.parent / "tools" / "build_info_plist.py",
+)
+build_info_plist = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(build_info_plist)
+
+
+def test_metadata():
+    p = build_info_plist.build_plist()
+    assert p["bundleid"] == "com.brandon.launchd-monitor"
+    assert p["variablesdontexport"] == []
+
+
+def test_has_two_script_filters_and_dispatch():
+    types = [o["type"] for o in build_info_plist.build_plist()["objects"]]
+    assert types.count("alfred.workflow.input.scriptfilter") == 2
+    assert "alfred.workflow.action.script" in types
+    assert "alfred.workflow.output.largetype" in types
+
+
+def test_list_keyword_lj():
+    objs = {o["uid"]: o for o in build_info_plist.build_plist()["objects"]}
+    assert objs[build_info_plist.UID_LIST]["config"]["keyword"] == "lj"
+
+
+def test_list_connects_to_detail_and_dispatch_with_modifiers():
+    conns = build_info_plist.build_plist()["connections"][build_info_plist.UID_LIST]
+    dests = {(c["destinationuid"], c["modifiers"]) for c in conns}
+    assert (build_info_plist.UID_DETAIL, 0) in dests           # Enter -> detail
+    assert (build_info_plist.UID_DISPATCH, 1048576) in dests   # cmd -> dispatch
+    assert (build_info_plist.UID_DISPATCH, 524288) in dests    # alt -> dispatch
+    assert (build_info_plist.UID_DISPATCH, 262144) in dests    # ctrl -> dispatch
+
+
+def test_dispatch_connects_to_largetype():
+    conns = build_info_plist.build_plist()["connections"][build_info_plist.UID_DISPATCH]
+    assert conns[0]["destinationuid"] == build_info_plist.UID_LARGETYPE
+
+
+def test_config_sheet_variables_present():
+    cfg = build_info_plist.build_plist()["userconfigurationconfig"]
+    variables = {c["variable"] for c in cfg}
+    expected = {
+        "SCOPE", "LABEL_GLOB", "AGENTS_DIR", "TERMINAL",
+        "LOG_TOOL", "LOG_STREAM", "LOG_LINES"
+    }
+    assert variables == expected
