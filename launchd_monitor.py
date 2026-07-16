@@ -452,9 +452,20 @@ def build_detail(config: Config, label: str) -> JobDetail:
     )
 
 
-def _detail_row(title: str, action: str, label: str) -> dict:
+def _detail_row(
+    title: str,
+    action: str,
+    label: str,
+    subtitle: str | None = None,
+    quicklookurl: str | None = None,
+) -> dict:
     """Build one actionable detail row whose arg is `<action>:<label>`."""
-    return {"title": title, "arg": f"{action}:{label}", "valid": True}
+    row = {"title": title, "arg": f"{action}:{label}", "valid": True}
+    if subtitle:
+        row["subtitle"] = subtitle
+    if quicklookurl:
+        row["quicklookurl"] = quicklookurl
+    return row
 
 
 def emit_detail(detail: JobDetail) -> dict:
@@ -471,19 +482,91 @@ def emit_detail(detail: JobDetail) -> dict:
     else:
         items.append(_detail_row("\U0001f6ab Disable", "disable", label))
     if detail.stdout_path:
-        items.append(_detail_row("\U0001f4df Tail stdout (terminal)", "tail-term-out", label))
-        items.append(_detail_row("\U0001f441 Peek stdout (Alfred)", "peek-out", label))
-        items.append(_detail_row("\U0001f4c2 Reveal stdout in Finder", "reveal-out", label))
-        items.append(_detail_row("⧉ Copy stdout path", "copy-logpath-out", label))
+        items.append(
+            _detail_row(
+                "\U0001f4df Tail stdout (terminal)",
+                "tail-term-out",
+                label,
+                subtitle=detail.stdout_path,
+                quicklookurl=detail.stdout_path,
+            )
+        )
+        items.append(
+            _detail_row(
+                "\U0001f441 Peek stdout (Alfred)",
+                "peek-out",
+                label,
+                subtitle=detail.stdout_path,
+                quicklookurl=detail.stdout_path,
+            )
+        )
+        items.append(
+            _detail_row(
+                "\U0001f4c2 Reveal stdout in Finder",
+                "reveal-out",
+                label,
+                subtitle=detail.stdout_path,
+                quicklookurl=detail.stdout_path,
+            )
+        )
+        items.append(
+            _detail_row(
+                "⧉ Copy stdout path",
+                "copy-logpath-out",
+                label,
+                subtitle=detail.stdout_path,
+                quicklookurl=detail.stdout_path,
+            )
+        )
     else:
         items.append({"title": "stdout not configured in plist", "valid": False})
     if detail.stderr_path:
-        items.append(_detail_row("\U0001f4df Tail stderr (terminal)", "tail-term-err", label))
-        items.append(_detail_row("\U0001f441 Peek stderr (Alfred)", "peek-err", label))
-        items.append(_detail_row("\U0001f4c2 Reveal stderr in Finder", "reveal-err", label))
-        items.append(_detail_row("⧉ Copy stderr path", "copy-logpath-err", label))
+        items.append(
+            _detail_row(
+                "\U0001f4df Tail stderr (terminal)",
+                "tail-term-err",
+                label,
+                subtitle=detail.stderr_path,
+                quicklookurl=detail.stderr_path,
+            )
+        )
+        items.append(
+            _detail_row(
+                "\U0001f441 Peek stderr (Alfred)",
+                "peek-err",
+                label,
+                subtitle=detail.stderr_path,
+                quicklookurl=detail.stderr_path,
+            )
+        )
+        items.append(
+            _detail_row(
+                "\U0001f4c2 Reveal stderr in Finder",
+                "reveal-err",
+                label,
+                subtitle=detail.stderr_path,
+                quicklookurl=detail.stderr_path,
+            )
+        )
+        items.append(
+            _detail_row(
+                "⧉ Copy stderr path",
+                "copy-logpath-err",
+                label,
+                subtitle=detail.stderr_path,
+                quicklookurl=detail.stderr_path,
+            )
+        )
     if detail.plist_path is not None:
-        items.append(_detail_row("\U0001f4dd Open plist in editor", "open-plist", label))
+        items.append(
+            _detail_row(
+                "\U0001f4dd Open plist in editor",
+                "open-plist",
+                label,
+                subtitle=str(detail.plist_path),
+                quicklookurl=str(detail.plist_path),
+            )
+        )
     items.append(_detail_row("⧉ Copy label", "copy-label", label))
     return {"items": items}
 

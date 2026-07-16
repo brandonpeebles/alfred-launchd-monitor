@@ -24,6 +24,10 @@ def _args(out):
     return [i.get("arg") for i in out["items"]]
 
 
+def _item(out, arg):
+    return next(i for i in out["items"] if i.get("arg") == arg)
+
+
 def test_detail_summary_row_first_and_invalid():
     out = emit_detail(_detail())
     assert out["items"][0]["valid"] is False
@@ -93,3 +97,43 @@ def test_detail_missing_stderr_omits_actions():
     args = _args(emit_detail(_detail(stderr_path=None)))
     assert "reveal-err:com.brandon.job" not in args
     assert "copy-logpath-err:com.brandon.job" not in args
+
+
+def test_detail_stdout_rows_have_subtitle_and_quicklookurl():
+    out = emit_detail(_detail(stdout_path="/logs/out.log"))
+    for arg in (
+        "peek-out:com.brandon.job",
+        "tail-term-out:com.brandon.job",
+        "reveal-out:com.brandon.job",
+        "copy-logpath-out:com.brandon.job",
+    ):
+        item = _item(out, arg)
+        assert item["subtitle"] == "/logs/out.log"
+        assert item["quicklookurl"] == "/logs/out.log"
+
+
+def test_detail_stderr_rows_have_subtitle_and_quicklookurl():
+    out = emit_detail(_detail(stderr_path="/logs/err.log"))
+    for arg in (
+        "tail-term-err:com.brandon.job",
+        "peek-err:com.brandon.job",
+        "reveal-err:com.brandon.job",
+        "copy-logpath-err:com.brandon.job",
+    ):
+        item = _item(out, arg)
+        assert item["subtitle"] == "/logs/err.log"
+        assert item["quicklookurl"] == "/logs/err.log"
+
+
+def test_detail_plist_row_has_subtitle_and_quicklookurl():
+    out = emit_detail(_detail())
+    item = _item(out, "open-plist:com.brandon.job")
+    assert item["subtitle"] == "/x.plist"
+    assert item["quicklookurl"] == "/x.plist"
+
+
+def test_detail_pathless_rows_unaffected():
+    out = emit_detail(_detail())
+    item = _item(out, "restart:com.brandon.job")
+    assert "quicklookurl" not in item
+    assert "subtitle" not in item
