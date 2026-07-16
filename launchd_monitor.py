@@ -7,10 +7,13 @@ and no syntax newer than 3.9. stdout is the Alfred interface — diagnostics go 
 from __future__ import annotations
 
 import fnmatch
+import json
+import logging
 import os
 import plistlib
 import re
 import subprocess
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
@@ -331,7 +334,7 @@ def emit_list(records: list[JobRecord], config: Config) -> dict:
         return {
             "items": [
                 {
-                    "title": f"No launchd jobs match \"{pattern}\"",
+                    "title": f'No launchd jobs match "{pattern}"',
                     "subtitle": f"scope={config.scope} · adjust SCOPE / LABEL_GLOB in config",
                     "valid": False,
                 }
@@ -473,3 +476,38 @@ def resolve_path(config: Config, label: str, kind: str) -> str:
     if kind == "err":
         return detail.stderr_path or ""
     return ""
+
+
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING, format="launchd-monitor: %(message)s")
+_log = logging.getLogger("launchd-monitor")
+
+
+def main(argv: list[str]) -> int:
+    """Entry point: dispatch list/detail/path subcommands. stdout is Alfred JSON or a path."""
+    if not argv:
+        _log.error("no subcommand given")
+        return 2
+    command = argv[0]
+    config = Config.from_env(os.environ)
+    if command == "list":
+        query = argv[1] if len(argv) > 1 else ""
+        print(json.dumps(emit_list(build_records(config, query), config)))
+        return 0
+    if command == "detail":
+        if len(argv) < 2:
+            _log.error("detail requires a label")
+            return 2
+        print(json.dumps(emit_detail(build_detail(config, argv[1]))))
+        return 0
+    if command == "path":
+        if len(argv) < 3:
+            _log.error("path requires <label> <plist|out|err>")
+            return 2
+        print(resolve_path(config, argv[1], argv[2]))
+        return 0
+    _log.error("unknown subcommand: %s", command)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
