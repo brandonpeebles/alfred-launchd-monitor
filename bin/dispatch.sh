@@ -6,7 +6,7 @@ set -euo pipefail
 export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PY="$SCRIPT_DIR/launchd_monitor.py"
+PY="${PY:-$SCRIPT_DIR/launchd_monitor.py}"
 LAUNCHCTL="${LAUNCHCTL:-/bin/launchctl}"
 DRY="${DISPATCH_DRY_RUN:-0}"
 UID_NUM="$(id -u)"
