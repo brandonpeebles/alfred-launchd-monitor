@@ -6,6 +6,7 @@ and no syntax newer than 3.9. stdout is the Alfred interface — diagnostics go 
 
 from __future__ import annotations
 
+import fnmatch
 import os
 import plistlib
 import re
@@ -258,3 +259,66 @@ def print_disabled(uid: int) -> dict[str, bool]:
 def launchctl_print(uid: int, label: str) -> PrintInfo:
     """Return parsed detail from `launchctl print gui/<uid>/<label>` (empty if not loaded)."""
     return parse_launchctl_print(_run([LAUNCHCTL, "print", f"gui/{uid}/{label}"]).stdout)
+
+
+_PLIST_ERRORS = (OSError, plistlib.InvalidFileException, ValueError)
+
+
+def discover_pairs(
+    config: Config, list_entries: dict[str, ListEntry]
+) -> list[tuple[str, Path | None]]:
+    """Discover (label, plist_path) pairs from the configured scope, filtered by label_glob."""
+    pairs: list[tuple[str, Path | None]] = []
+    if config.scope == "gui":
+        pairs = [(label, None) for label in sorted(list_entries)]
+    else:
+        for path in sorted(config.agents_dir.glob("*.plist")):
+            try:
+                info = read_plist(path)
+            except _PLIST_ERRORS:
+                continue
+            pairs.append((info.label or path.stem, path))
+    if config.label_glob:
+        pairs = [(lbl, p) for (lbl, p) in pairs if fnmatch.fnmatch(lbl, config.label_glob)]
+    return pairs
+
+
+def build_job_record(
+    label: str,
+    plist_path: Path | None,
+    list_entries: dict[str, ListEntry],
+    disabled_map: dict[str, bool],
+    plist_info: PlistInfo | None,
+) -> JobRecord:
+    """Merge plist source and runtime status into a JobRecord for the list view."""
+    entry = list_entries.get(label)
+    return JobRecord(
+        label=label,
+        plist_path=plist_path,
+        pid=entry.pid if entry else None,
+        last_exit_code=entry.last_status if entry else None,
+        loaded=entry is not None,
+        disabled=disabled_map.get(label, False),
+        stdout_path=plist_info.stdout_path if plist_info else None,
+        stderr_path=plist_info.stderr_path if plist_info else None,
+    )
+
+
+def build_records(config: Config, query: str = "") -> list[JobRecord]:
+    """Run the full list pipeline: gather runtime status, discover, merge, filter by query."""
+    list_entries = launchctl_list()
+    disabled_map = print_disabled(os.getuid())
+    pairs = discover_pairs(config, list_entries)
+    if query:
+        needle = query.lower()
+        pairs = [(lbl, p) for (lbl, p) in pairs if needle in lbl.lower()]
+    records: list[JobRecord] = []
+    for label, plist_path in pairs:
+        info: PlistInfo | None = None
+        if plist_path is not None:
+            try:
+                info = read_plist(plist_path)
+            except _PLIST_ERRORS:
+                info = None
+        records.append(build_job_record(label, plist_path, list_entries, disabled_map, info))
+    return records
