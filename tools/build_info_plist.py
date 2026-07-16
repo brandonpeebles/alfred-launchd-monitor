@@ -36,7 +36,7 @@ def _script_filter(uid: str, keyword: str, script: str, with_arg: bool) -> dict:
             "queuedelaymode": 0,
             "runningsubtext": "…",
             "script": script,
-            "scriptargtype": 0,  # pass query as argv ($1)
+            "scriptargtype": _ARG_AS_ARGV if with_arg else 0,  # pass query as argv ($1)
             "scriptfile": "",
             "subtext": "",
             "title": "Launchd Monitor",

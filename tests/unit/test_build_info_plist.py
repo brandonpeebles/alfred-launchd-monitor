@@ -54,3 +54,14 @@ def test_config_sheet_variables_present():
         "LOG_LINES",
     }
     assert variables == expected
+
+
+def test_script_filters_use_argv():
+    objs = {o["uid"]: o for o in build_info_plist.build_plist()["objects"]}
+    assert (
+        objs[build_info_plist.UID_LIST]["config"]["scriptargtype"] == build_info_plist._ARG_AS_ARGV
+    )
+    assert (
+        objs[build_info_plist.UID_DETAIL]["config"]["scriptargtype"]
+        == build_info_plist._ARG_AS_ARGV
+    )
