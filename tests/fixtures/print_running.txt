@@ -1,0 +1,15 @@
+com.brandon.running-job = {
+	active count = 1
+	path = /Users/brandon/Library/LaunchAgents/com.brandon.running-job.plist
+	state = running
+	program = /usr/bin/python3
+	arguments = {
+		/usr/bin/python3
+		/Users/brandon/bin/job.py
+	}
+	working directory = /Users/brandon
+	stdout path = /Users/brandon/Library/Logs/job.out.log
+	stderr path = /Users/brandon/Library/Logs/job.err.log
+	pid = 4821
+	last exit code = 0
+}

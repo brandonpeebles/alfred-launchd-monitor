@@ -1,0 +1,6 @@
+com.brandon.failing-job = {
+	active count = 0
+	path = /Users/brandon/Library/LaunchAgents/com.brandon.failing-job.plist
+	state = not running
+	last exit code = 78
+}

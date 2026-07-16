@@ -179,3 +179,55 @@ def read_plist(path: Path) -> PlistInfo:
         program_arguments=list(data.get("ProgramArguments", [])),
         working_dir=data.get("WorkingDirectory"),
     )
+
+
+@dataclass(frozen=True)
+class PrintInfo:
+    """Fields extracted from `launchctl print gui/<uid>/<label>` output."""
+
+    plist_path: str | None
+    pid: int | None
+    last_exit_code: int | None
+    state: str | None
+    program_arguments: list[str]
+    stdout_path: str | None
+    stderr_path: str | None
+    working_dir: str | None
+
+
+def _find_scalar(output: str, key: str) -> str | None:
+    """Return the RHS of a `<key> = <value>` line in launchctl print output, or None."""
+    match = re.search(rf"^\s*{re.escape(key)}\s*=\s*(.+?)\s*$", output, re.MULTILINE)
+    return match.group(1) if match else None
+
+
+def _find_int(output: str, key: str) -> int | None:
+    """Return the int RHS of a `<key> = <int>` line, or None if absent/non-numeric."""
+    raw = _find_scalar(output, key)
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def parse_launchctl_print(output: str) -> PrintInfo:
+    """Parse `launchctl print` output. Returns an empty PrintInfo when output is blank."""
+    program_arguments: list[str] = []
+    args_block = re.search(r"arguments\s*=\s*\{(.*?)\}", output, re.DOTALL)
+    if args_block:
+        for line in args_block.group(1).splitlines():
+            token = line.strip().strip('"')
+            if token:
+                program_arguments.append(token)
+    return PrintInfo(
+        plist_path=_find_scalar(output, "path"),
+        pid=_find_int(output, "pid"),
+        last_exit_code=_find_int(output, "last exit code"),
+        state=_find_scalar(output, "state"),
+        program_arguments=program_arguments,
+        stdout_path=_find_scalar(output, "stdout path"),
+        stderr_path=_find_scalar(output, "stderr path"),
+        working_dir=_find_scalar(output, "working directory"),
+    )
