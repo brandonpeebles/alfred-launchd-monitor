@@ -85,6 +85,12 @@ def test_disable_builds_disable():
     assert "/bin/launchctl disable gui/" in _run("disable:com.brandon.job").stdout
 
 
+def test_stop_builds_kill_sigterm():
+    out = _run("stop:com.brandon.job").stdout
+    assert "/bin/launchctl kill SIGTERM gui/" in out
+    assert "com.brandon.job" in out
+
+
 def test_unknown_action_exits_nonzero():
     result = _run("bogus:com.brandon.job")
     assert result.returncode != 0
@@ -159,3 +165,25 @@ def test_restart_failure_notifies_and_exits_nonzero(tmp_path):
     assert "restart failed" in result.stderr
     assert notify_log.exists()
     assert "✗ restart failed" in notify_log.read_text()
+
+
+def test_stop_failure_notifies_and_exits_nonzero(tmp_path):
+    notify_log = tmp_path / "notify.log"
+    stub_osascript = tmp_path / "osascript_stub.sh"
+    stub_osascript.write_text('#!/bin/sh\nprintf "%s\\n" "$2" >> "$NOTIFY_LOG"\n')
+    stub_osascript.chmod(0o755)
+
+    result = _run(
+        "stop:com.brandon.definitely-not-a-real-label-nonexistent",
+        extra_env={
+            "DISPATCH_DRY_RUN": "0",
+            "LAUNCHCTL": "/usr/bin/false",
+            "OSASCRIPT": str(stub_osascript),
+            "NOTIFY_LOG": str(notify_log),
+        },
+    )
+
+    assert result.returncode != 0
+    assert "stop failed" in result.stderr
+    assert notify_log.exists()
+    assert "✗ stop failed" in notify_log.read_text()

@@ -118,6 +118,8 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
       run "$LAUNCHCTL" enable "$target" && notify "Launchd Monitor" "✓ Enabled ${label}" || die "enable failed: ${label}" ;;
     disable)
       run "$LAUNCHCTL" disable "$target" && notify "Launchd Monitor" "🚫 Disabled ${label}" || die "disable failed: ${label}" ;;
+    stop)
+      run "$LAUNCHCTL" kill SIGTERM "$target" && notify "Launchd Monitor" "◼ Stopped ${label}" || die "stop failed: ${label}" ;;
     peek)      peek_stream "${LOG_STREAM:-out}" ;;
     peek-out)  peek_stream out ;;
     peek-err)  peek_stream err ;;

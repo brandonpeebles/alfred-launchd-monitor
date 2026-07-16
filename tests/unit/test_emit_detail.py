@@ -73,6 +73,16 @@ def test_detail_stdout_actions_present():
     assert "copy-label:com.brandon.job" in args
 
 
+def test_detail_running_shows_stop():
+    args = _args(emit_detail(_detail(loaded=True, pid=4821)))
+    assert "stop:com.brandon.job" in args
+
+
+def test_detail_not_running_hides_stop():
+    args = _args(emit_detail(_detail(loaded=False, pid=None)))
+    assert "stop:com.brandon.job" not in args
+
+
 def test_detail_missing_stdout_shows_notice_row():
     out = emit_detail(_detail(stdout_path=None))
     titles = [i["title"] for i in out["items"]]
