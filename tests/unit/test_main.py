@@ -30,8 +30,16 @@ def test_main_path(monkeypatch, capsys):
 
 
 def test_main_unknown_subcommand_returns_nonzero():
-    assert main(["bogus"]) != 0
+    assert main(["bogus"]) == 2
 
 
 def test_main_no_args_returns_nonzero():
-    assert main([]) != 0
+    assert main([]) == 2
+
+
+def test_main_detail_without_label_returns_2():
+    assert main(["detail"]) == 2
+
+
+def test_main_path_without_kind_returns_2():
+    assert main(["path", "com.a"]) == 2

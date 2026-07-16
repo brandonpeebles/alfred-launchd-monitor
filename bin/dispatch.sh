@@ -104,7 +104,7 @@ tail_stream() {
   notify "Launchd Monitor" "📟 Tailing ${kind} for ${label}"
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [ "${BASH_SOURCE[0]}" = "$0" ] && [ "${DISPATCH_SOURCE_ONLY:-0}" != "1" ]; then
   case "$action" in
     restart)
       run "$LAUNCHCTL" kickstart -k "$target" && notify "Launchd Monitor" "↻ Restarted ${label}" || die "restart failed: ${label}" ;;
