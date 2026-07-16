@@ -6,6 +6,7 @@ and no syntax newer than 3.9. stdout is the Alfred interface — diagnostics go 
 
 from __future__ import annotations
 
+import plistlib
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -154,3 +155,27 @@ def parse_launchctl_list(output: str) -> dict[str, ListEntry]:
 def parse_print_disabled(output: str) -> dict[str, bool]:
     """Parse `launchctl print-disabled` output into label -> disabled bool."""
     return {m.group("label"): m.group("val") == "true" for m in _DISABLED_RE.finditer(output)}
+
+
+@dataclass(frozen=True)
+class PlistInfo:
+    """Fields read from a LaunchAgent .plist (source of truth for log paths)."""
+
+    label: str | None
+    stdout_path: str | None
+    stderr_path: str | None
+    program_arguments: list[str]
+    working_dir: str | None
+
+
+def read_plist(path: Path) -> PlistInfo:
+    """Read a LaunchAgent plist. Raises OSError / plistlib.InvalidFileException on failure."""
+    with path.open("rb") as handle:
+        data = plistlib.load(handle)
+    return PlistInfo(
+        label=data.get("Label"),
+        stdout_path=data.get("StandardOutPath"),
+        stderr_path=data.get("StandardErrorPath"),
+        program_arguments=list(data.get("ProgramArguments", [])),
+        working_dir=data.get("WorkingDirectory"),
+    )
