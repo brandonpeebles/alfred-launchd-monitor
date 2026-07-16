@@ -125,7 +125,7 @@ class JobRecord:
         return " · ".join(parts)
 
 
-_DISABLED_RE = re.compile(r'"(?P<label>[^"]+)"\s*=>\s*(?P<val>true|false)')
+_DISABLED_RE = re.compile(r'"(?P<label>[^"]+)"\s*=>\s*(?P<val>true|false|enabled|disabled)')
 
 
 @dataclass(frozen=True)
@@ -160,7 +160,10 @@ def parse_launchctl_list(output: str) -> dict[str, ListEntry]:
 
 def parse_print_disabled(output: str) -> dict[str, bool]:
     """Parse `launchctl print-disabled` output into label -> disabled bool."""
-    return {m.group("label"): m.group("val") == "true" for m in _DISABLED_RE.finditer(output)}
+    return {
+        m.group("label"): m.group("val") in ("true", "disabled")
+        for m in _DISABLED_RE.finditer(output)
+    }
 
 
 @dataclass(frozen=True)
