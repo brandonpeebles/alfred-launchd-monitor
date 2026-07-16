@@ -400,7 +400,16 @@ class JobDetail:
 def _find_plist(config: Config, label: str) -> Path | None:
     """Locate a job's plist in the agents dir when launchctl print did not report one."""
     candidate = config.agents_dir / f"{label}.plist"
-    return candidate if candidate.exists() else None
+    if candidate.exists():
+        return candidate
+    for path in sorted(config.agents_dir.glob("*.plist")):
+        try:
+            info = read_plist(path)
+        except _PLIST_ERRORS:
+            continue
+        if info.label == label:
+            return path
+    return None
 
 
 def build_detail(config: Config, label: str) -> JobDetail:
