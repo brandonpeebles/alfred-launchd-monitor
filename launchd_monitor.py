@@ -235,12 +235,30 @@ def _find_int(output: str, key: str) -> int | None:
         return None
 
 
+def _extract_braced_block(output: str, key: str) -> str | None:
+    """Return the text between the braces of `<key> = { ... }`, tracking nesting depth
+    so an embedded `{`/`}` pair inside the block doesn't prematurely close it."""
+    open_match = re.search(rf"{re.escape(key)}\s*=\s*\{{", output)
+    if not open_match:
+        return None
+    start = open_match.end()
+    depth = 1
+    for i, ch in enumerate(output[start:], start=start):
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return output[start:i]
+    return None
+
+
 def parse_launchctl_print(output: str) -> PrintInfo:
     """Parse `launchctl print` output. Returns an empty PrintInfo when output is blank."""
     program_arguments: list[str] = []
-    args_block = re.search(r"arguments\s*=\s*\{(.*?)\}", output, re.DOTALL)
-    if args_block:
-        for line in args_block.group(1).splitlines():
+    args_block = _extract_braced_block(output, "arguments")
+    if args_block is not None:
+        for line in args_block.splitlines():
             token = line.strip().strip('"')
             if token:
                 program_arguments.append(token)

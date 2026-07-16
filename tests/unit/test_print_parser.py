@@ -17,6 +17,21 @@ def test_parse_print_running():
     assert info.working_dir == "/Users/brandon"
 
 
+def test_parse_print_running_embedded_braces():
+    info = parse_launchctl_print(
+        (FIXTURES / "print_running_embedded_braces.txt").read_text(encoding="utf-8")
+    )
+    assert info.program_arguments == [
+        "/usr/bin/osascript",
+        "-l",
+        "JavaScript",
+        "-e",
+        "function run() { return 1 }",
+    ]
+    assert info.working_dir == "/Users/brandon"
+    assert info.pid == 5931
+
+
 def test_parse_print_exited():
     info = parse_launchctl_print((FIXTURES / "print_exited.txt").read_text(encoding="utf-8"))
     assert info.pid is None
