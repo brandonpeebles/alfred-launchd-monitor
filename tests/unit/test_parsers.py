@@ -28,3 +28,13 @@ def test_parse_print_disabled():
         "com.brandon.morning-brief": False,
         "com.brandon.disabled-job": True,
     }
+
+
+def test_parse_print_disabled_modern_format():
+    disabled = parse_print_disabled(
+        (FIXTURES / "print_disabled_modern.txt").read_text(encoding="utf-8")
+    )
+    assert disabled == {
+        "com.brandon.morning-brief": False,
+        "com.brandon.disabled-job": True,
+    }
