@@ -1,3 +1,4 @@
+import dataclasses
 import re
 from pathlib import Path
 
@@ -14,21 +15,22 @@ LABEL = "com.brandon.contract"
 KNOWN_DISPATCH_ONLY_GAPS = set()
 
 
+_DEFAULT_DETAIL = JobDetail(
+    label=LABEL,
+    plist_path=Path("/x.plist"),
+    pid=4821,
+    last_exit_code=0,
+    loaded=True,
+    disabled=False,
+    stdout_path="/logs/out.log",
+    stderr_path="/logs/err.log",
+    program_arguments=["/usr/bin/python3", "/x.py"],
+    working_dir="/home",
+)
+
+
 def _detail(**kw):
-    base = dict(
-        label=LABEL,
-        plist_path=Path("/x.plist"),
-        pid=4821,
-        last_exit_code=0,
-        loaded=True,
-        disabled=False,
-        stdout_path="/logs/out.log",
-        stderr_path="/logs/err.log",
-        program_arguments=["/usr/bin/python3", "/x.py"],
-        working_dir="/home",
-    )
-    base.update(kw)
-    return JobDetail(**base)
+    return dataclasses.replace(_DEFAULT_DETAIL, **kw)
 
 
 def _actions_from_args(args):
@@ -68,6 +70,7 @@ def _dispatch_case_labels():
     """Case labels handled by bin/dispatch.sh's `case "$action" in ... esac` block."""
     text = DISPATCH.read_text()
     match = re.search(r'case "\$action" in(.*?)esac', text, re.DOTALL)
+    assert match is not None
     block = match.group(1)
     labels = set()
     for line in block.splitlines():

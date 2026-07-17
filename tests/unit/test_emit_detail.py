@@ -1,23 +1,24 @@
+import dataclasses
 from pathlib import Path
 
 from launchd_monitor import JobDetail, emit_detail
 
+_DEFAULT_DETAIL = JobDetail(
+    label="com.brandon.job",
+    plist_path=Path("/x.plist"),
+    pid=4821,
+    last_exit_code=0,
+    loaded=True,
+    disabled=False,
+    stdout_path="/logs/out.log",
+    stderr_path="/logs/err.log",
+    program_arguments=["/usr/bin/python3", "/x.py"],
+    working_dir="/home",
+)
+
 
 def _detail(**kw):
-    base = dict(
-        label="com.brandon.job",
-        plist_path=Path("/x.plist"),
-        pid=4821,
-        last_exit_code=0,
-        loaded=True,
-        disabled=False,
-        stdout_path="/logs/out.log",
-        stderr_path="/logs/err.log",
-        program_arguments=["/usr/bin/python3", "/x.py"],
-        working_dir="/home",
-    )
-    base.update(kw)
-    return JobDetail(**base)
+    return dataclasses.replace(_DEFAULT_DETAIL, **kw)
 
 
 def _args(out):

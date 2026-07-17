@@ -1,19 +1,21 @@
+import dataclasses
+
 from launchd_monitor import JobRecord, JobState, glyph
+
+_DEFAULT_RECORD = JobRecord(
+    label="com.brandon.job",
+    plist_path=None,
+    pid=None,
+    last_exit_code=0,
+    loaded=True,
+    disabled=False,
+    stdout_path=None,
+    stderr_path=None,
+)
 
 
 def _rec(**kw):
-    base = dict(
-        label="com.brandon.job",
-        plist_path=None,
-        pid=None,
-        last_exit_code=0,
-        loaded=True,
-        disabled=False,
-        stdout_path=None,
-        stderr_path=None,
-    )
-    base.update(kw)
-    return JobRecord(**base)
+    return dataclasses.replace(_DEFAULT_RECORD, **kw)
 
 
 def test_state_precedence():

@@ -1,32 +1,35 @@
+import dataclasses
+
 import launchd_monitor as lm
 from launchd_monitor import Config, ListEntry, PlistInfo, PrintInfo, build_detail
 
+_DEFAULT_PRINT_INFO = PrintInfo(
+    plist_path=None,
+    pid=None,
+    last_exit_code=None,
+    state=None,
+    program_arguments=[],
+    stdout_path=None,
+    stderr_path=None,
+    working_dir=None,
+)
+
 
 def _pinfo(**overrides):
-    defaults = dict(
-        plist_path=None,
-        pid=None,
-        last_exit_code=None,
-        state=None,
-        program_arguments=[],
-        stdout_path=None,
-        stderr_path=None,
-        working_dir=None,
-    )
-    defaults.update(overrides)
-    return PrintInfo(**defaults)
+    return dataclasses.replace(_DEFAULT_PRINT_INFO, **overrides)
+
+
+_DEFAULT_PLIST_INFO = PlistInfo(
+    label="com.a",
+    stdout_path=None,
+    stderr_path=None,
+    program_arguments=[],
+    working_dir=None,
+)
 
 
 def _plist_info(**overrides):
-    defaults = dict(
-        label="com.a",
-        stdout_path=None,
-        stderr_path=None,
-        program_arguments=[],
-        working_dir=None,
-    )
-    defaults.update(overrides)
-    return PlistInfo(**defaults)
+    return dataclasses.replace(_DEFAULT_PLIST_INFO, **overrides)
 
 
 def _patch_common(monkeypatch, pinfo, plist_info=None, loaded=False, disabled=False):

@@ -1,12 +1,13 @@
 import importlib.util
 from pathlib import Path
 
-import tomllib
+import tomllib  # ty: ignore[unresolved-import]
 
 _spec = importlib.util.spec_from_file_location(
     "build_info_plist",
     Path(__file__).parent.parent.parent / "tools" / "build_info_plist.py",
 )
+assert _spec is not None and _spec.loader is not None
 build_info_plist = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(build_info_plist)
 

@@ -6,7 +6,7 @@ import plistlib
 import sys
 from pathlib import Path
 
-import tomllib
+import tomllib  # ty: ignore[unresolved-import]
 
 UID_LIST = "10000000-0000-0000-0000-000000000001"
 UID_DETAIL = "20000000-0000-0000-0000-000000000002"

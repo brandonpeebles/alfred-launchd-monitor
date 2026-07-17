@@ -1,24 +1,25 @@
+import dataclasses
 from pathlib import Path
 
 import launchd_monitor as lm
 from launchd_monitor import Config, JobDetail, resolve_path
 
+_DEFAULT_DETAIL = JobDetail(
+    label="com.a",
+    plist_path=Path("/x.plist"),
+    pid=None,
+    last_exit_code=None,
+    loaded=True,
+    disabled=False,
+    stdout_path="/logs/out.log",
+    stderr_path="/logs/err.log",
+    program_arguments=[],
+    working_dir=None,
+)
+
 
 def _detail(**kw):
-    base = dict(
-        label="com.a",
-        plist_path=Path("/x.plist"),
-        pid=None,
-        last_exit_code=None,
-        loaded=True,
-        disabled=False,
-        stdout_path="/logs/out.log",
-        stderr_path="/logs/err.log",
-        program_arguments=[],
-        working_dir=None,
-    )
-    base.update(kw)
-    return JobDetail(**base)
+    return dataclasses.replace(_DEFAULT_DETAIL, **kw)
 
 
 def test_resolve_path_plist_present(monkeypatch):
