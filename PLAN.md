@@ -2172,7 +2172,3 @@ git commit -m "feat(launchd-monitor): packaging script, README, workflow icon"
 **Placeholder scan:** No "TBD"/"add error handling"/"similar to Task N" — every code step is complete. The one hand-adjustment (Alfred GUI argv/Large Type check) is an explicit, unavoidable manual verification, not a code placeholder.
 
 **Type consistency:** `JobRecord`/`JobDetail` field names and the `state`/`subtitle`/`summary` methods are consistent across Tasks 3, 8, 9, 10, 11. `resolve_path(config, label, kind)` (Task 10) matches the `path <label> <kind>` subcommand (Task 11) and `dispatch.sh`'s `resolve()` (Task 12). Action strings emitted in Tasks 9/10 (`restart`, `tail-term`, `peek`, `unload`, `load`, `enable`, `disable`, `tail-term-out`, `peek-out`, `reveal-out`, `open-plist`, `copy-label`, `copy-logpath-out`, `tail-term-err`, `peek-err`) all have matching `case` branches in Task 12. UID/modifier constants in Task 13 match its tests.
-
-
-
-

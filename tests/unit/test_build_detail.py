@@ -35,14 +35,13 @@ def _plist_info(**overrides):
 def _patch_common(monkeypatch, pinfo, plist_info=None, loaded=False, disabled=False):
     monkeypatch.setattr(lm, "launchctl_print", lambda uid, label: pinfo)
     monkeypatch.setattr(
-        lm, "launchctl_list", lambda: ({"com.a": ListEntry("com.a", None, 0)} if loaded else {})
+        lm, "launchctl_list", lambda: {"com.a": ListEntry("com.a", None, 0)} if loaded else {}
     )
-    monkeypatch.setattr(
-        lm, "print_disabled", lambda uid: ({"com.a": True} if disabled else {})
-    )
+    monkeypatch.setattr(lm, "print_disabled", lambda uid: {"com.a": True} if disabled else {})
     if plist_info is not None:
         monkeypatch.setattr(lm, "read_plist", lambda path: plist_info)
     else:
+
         def boom(path):
             raise AssertionError("read_plist should not be called")
 

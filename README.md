@@ -33,11 +33,20 @@ Alfred prompts for configuration on first import.
 
 ## Develop
 
+One-time setup (installs deps + git hooks):
+
 ```bash
-uv run pytest          # unit tests
-uv run ruff check .    # lint
-uv run ruff format .   # format
-tools/package.sh       # rebuild the .alfredworkflow
+tools/setup.sh
+```
+
+Quality gates run automatically via [pre-commit](https://pre-commit.com): ruff
+(lint + format), ty (type check), and standard hygiene hooks run on every commit;
+the test suite runs at `git push`. Run them manually anytime:
+
+```bash
+uv run pre-commit run --all-files   # all commit-stage hooks
+uv run pytest                       # unit tests (also gates git push)
+tools/package.sh                    # rebuild the .alfredworkflow
 ```
 
 `uv.lock` is committed to pin dev dependency versions for reproducible environments.

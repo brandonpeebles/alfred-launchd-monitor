@@ -1,0 +1,57 @@
+# Quality gate managed by the pre-commit framework.
+# First-time setup per clone: run `tools/setup.sh`
+# (installs both pre-commit + pre-push hooks via default_install_hook_types below)
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  # Keep the ruff/ty mirror revs below pinned to uv.lock (runs first; may rewrite this file).
+  - repo: https://github.com/dribia/sync-with-uv
+    rev: v0.1.5
+    hooks:
+      - id: sync-with-uv
+
+  # Standard hygiene set
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '(^tests/fixtures/|\.png$)'
+      - id: end-of-file-fixer
+        exclude: '(^tests/fixtures/|\.png$)'
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+      - id: mixed-line-ending
+
+  # Ruff: lint (with fix) THEN format — fix can rewrite code that needs reformatting.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.22
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  # ty type checking (delegates to the project env via uv; whole-project check).
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.60
+    hooks:
+      - id: ty
+
+  # Keep uv.lock in sync with pyproject.toml.
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.29
+    hooks:
+      - id: uv-lock
+
+  # Test suite runs only at push time, not on every commit.
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
