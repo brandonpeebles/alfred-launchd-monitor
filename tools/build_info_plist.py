@@ -23,14 +23,21 @@ _SCRIPT_TYPE_BASH = 0  # /bin/bash
 _ARG_AS_ARGV = 1  # "with input as argv" for Run Script; Script Filter reads $1
 
 
-def _script_filter(uid: str, keyword: str, script: str, with_arg: bool) -> dict:
-    """Build a Script Filter object that runs `python3 launchd_monitor.py ...`."""
+def _script_filter(
+    uid: str, keyword: str, script: str, with_arg: bool, filters_results: bool = True
+) -> dict:
+    """Build a Script Filter object that runs `python3 launchd_monitor.py ...`.
+
+    filters_results=False when the script emits an already-final menu (the detail
+    view): the label arrives as the query, so letting Alfred re-filter rows against
+    it would hide every row until the query is cleared.
+    """
     return {
         "uid": uid,
         "type": "alfred.workflow.input.scriptfilter",
         "version": 3,
         "config": {
-            "alfredfiltersresults": True,
+            "alfredfiltersresults": filters_results,
             "argumenttype": 1 if with_arg else 2,
             "keyword": keyword,
             "queuedelaycustom": 3,
@@ -104,7 +111,13 @@ def build_plist() -> dict:
     """Assemble the complete Alfred workflow dict."""
     objects = [
         _script_filter(UID_LIST, "lj", 'python3 launchd_monitor.py list "$1"', with_arg=True),
-        _script_filter(UID_DETAIL, "", 'python3 launchd_monitor.py detail "$1"', with_arg=True),
+        _script_filter(
+            UID_DETAIL,
+            "",
+            'python3 launchd_monitor.py detail "$1"',
+            with_arg=True,
+            filters_results=False,
+        ),
         _dispatch_object(),
         _largetype_object(),
     ]

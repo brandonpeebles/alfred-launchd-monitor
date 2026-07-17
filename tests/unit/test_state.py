@@ -34,9 +34,9 @@ def test_glyphs():
 
 def test_subtitle():
     sub = _rec(pid=4821, last_exit_code=0).subtitle()
-    assert sub == "🟢 running · PID 4821 · exit 0 · loaded"
-    assert _rec(pid=None, last_exit_code=78).subtitle() == "🔴 exited · exit 78 · loaded"
-    assert _rec(loaded=False, last_exit_code=None).subtitle() == "⚫ unloaded · unloaded"
+    assert sub == "🟢 running · PID 4821 · exit 0"
+    assert _rec(pid=None, last_exit_code=78).subtitle() == "🔴 exited · exit 78"
+    assert _rec(loaded=False, last_exit_code=None).subtitle() == "⚫ unloaded"
 
 
 def test_subtitle_signal_terminated():
@@ -50,5 +50,5 @@ def test_subtitle_unknown_signal_falls_back_to_number():
 def test_subtitle_disabled_with_pid_shows_running():
     assert (
         _rec(disabled=True, pid=4821, last_exit_code=0).subtitle()
-        == "🚫 disabled (running, PID 4821) · exit 0 · disabled"
+        == "🚫 disabled (running, PID 4821) · exit 0"
     )

@@ -15,7 +15,7 @@ Alfred prompts for configuration on first import.
 
 ## Use
 
-- Type `lj` to list jobs. Each row shows a status glyph, PID, last exit, and load state.
+- Type `lj` to list jobs. Each row shows a status glyph (🟢 running · ⚪ loaded/idle · 🔴 exited nonzero · ⚫ unloaded · 🚫 disabled), PID, and last exit.
 - **Enter** drills into a job's full action menu.
 - On a list row: **⌘** restart · **⌥** tail log in terminal · **⌃** peek log in Alfred.
 

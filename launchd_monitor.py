@@ -125,7 +125,11 @@ class JobRecord:
         return derive_state(self.disabled, self.loaded, self.pid, self.last_exit_code)
 
     def subtitle(self) -> str:
-        """Build the Alfred row subtitle: glyph · state · PID · exit · load state."""
+        """Build the Alfred row subtitle: glyph · state · PID · exit.
+
+        The trailing load-state token is intentionally omitted — the state word
+        (loaded/unloaded/disabled/running/exited) already conveys it.
+        """
         state = self.state
         if state is JobState.DISABLED and self.pid is not None:
             parts = [f"{glyph(state)} disabled (running, PID {self.pid})"]
@@ -135,7 +139,6 @@ class JobRecord:
                 parts.append(f"PID {self.pid}")
         if self.last_exit_code is not None:
             parts.append(_format_exit_status(self.last_exit_code))
-        parts.append("disabled" if self.disabled else ("loaded" if self.loaded else "unloaded"))
         return " · ".join(parts)
 
 

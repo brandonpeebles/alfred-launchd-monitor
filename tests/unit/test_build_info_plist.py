@@ -69,6 +69,14 @@ def test_script_filters_use_argv():
     )
 
 
+def test_detail_filter_does_not_let_alfred_refilter_results():
+    # The detail Script Filter receives the selected label as its query. Its script
+    # emits the exact action menu, so Alfred must NOT re-filter those rows against
+    # the label — doing so hides every row until the query is cleared.
+    objs = {o["uid"]: o for o in build_info_plist.build_plist()["objects"]}
+    assert objs[build_info_plist.UID_DETAIL]["config"]["alfredfiltersresults"] is False
+
+
 def test_log_stream_popup_has_no_both_option():
     cfg = build_info_plist.build_plist()["userconfigurationconfig"]
     log_stream_var = next(c for c in cfg if c["variable"] == "LOG_STREAM")
